@@ -59,3 +59,6 @@ console.log(packageDescriptor.packageName, panel.pane);
 - ADRs: [docs/adrs](./docs/adrs)
 - TDRs: [docs/tdrs](./docs/tdrs)
 - Design notes: [docs/design](./docs/design)
+- Parent feature flag: `isekai.player-system.packages.enabled`
+- Capability: not required for package bootstrap; interface adoption remains feature-flag led
+- Rollback: disable `isekai.player-system.packages.enabled` to halt package-family adoption without changing package code

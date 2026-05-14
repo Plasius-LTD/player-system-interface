@@ -31,12 +31,14 @@ export interface OverlayAlertMarker {
 
 export const PLAYER_SYSTEM_INTERFACE_PACKAGE = "@plasius/player-system-interface";
 export const PLAYER_SYSTEM_INTERFACE_ENV_PREFIX = "PLAYER_SYSTEM_INTERFACE";
+export const PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID =
+  "isekai.player-system.packages.enabled";
 export const PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID =
-  "isekai.player-system.interface.enabled";
+  PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID;
 
 export const packageDescriptor: PackageDescriptor = Object.freeze({
   packageName: PLAYER_SYSTEM_INTERFACE_PACKAGE,
-  featureFlagId: PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID,
+  featureFlagId: PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID,
   envPrefix: PLAYER_SYSTEM_INTERFACE_ENV_PREFIX,
   summary:
     "World-space Player System overlays, focus panes, and target-surface contracts for Plasius game experiences.",
