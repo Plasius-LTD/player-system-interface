@@ -25,6 +25,8 @@ npm install @plasius/player-system-interface
 - focus panes and combat-safe reductions
 - world-space overlay panel definitions
 - target popup anchors and alert markers
+- overlay accessibility contracts for keyboard, focus restoration, and announcements
+- frame-budget assumptions for diegetic panel updates
 - Party/System composition metadata
 
 It does not own gameplay orchestration or world authority.
@@ -40,6 +42,7 @@ node demo/example.mjs
 
 ```ts
 import {
+  createPlayerSystemInterfaceContract,
   createWorldSpacePanelDefinition,
   packageDescriptor,
 } from "@plasius/player-system-interface";
@@ -52,7 +55,19 @@ const panel = createWorldSpacePanelDefinition({
 });
 
 console.log(packageDescriptor.packageName, panel.pane);
+console.log(createPlayerSystemInterfaceContract().frameBudget.maxFrameMs);
 ```
+
+## Interface NFR Contract
+
+The inherited feature flag for this work is `isekai.player-system.runtime-nfr.enabled`.
+
+`defaultPlayerSystemInterfaceContract` and `createPlayerSystemInterfaceContract()` make these host expectations explicit:
+
+- sequential or direct-hotkey keyboard access for overlay activation
+- focus restoration to the trigger, pane heading, or nearest anchor
+- live-region behavior for assistive announcements
+- per-frame interaction budgets for world-space panels
 
 ## Governance
 
