@@ -68,6 +68,7 @@ The inherited feature flag for this work is `isekai.player-system.runtime-nfr.en
 - focus restoration to the trigger, pane heading, or nearest anchor
 - live-region behavior for assistive announcements
 - per-frame interaction budgets for world-space panels
+- partial nested overrides for accessibility and frame-budget values
 
 ## Governance
 
