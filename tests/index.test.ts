@@ -67,4 +67,24 @@ describe("@plasius/player-system-interface", () => {
     expect(Object.isFrozen(contract.accessibility)).toBe(true);
     expect(Object.isFrozen(contract.frameBudget)).toBe(true);
   });
+
+  it("accepts partial nested interface overrides from TypeScript consumers", () => {
+    const input = {
+      accessibility: {
+        keyboardPath: "direct-hotkey",
+        liveRegionMode: "assertive",
+      },
+      frameBudget: {
+        maxInteractivePanelsPerFrame: 1,
+      },
+    } satisfies Parameters<typeof createPlayerSystemInterfaceContract>[0];
+
+    const contract = createPlayerSystemInterfaceContract(input);
+
+    expect(contract.accessibility.keyboardPath).toBe("direct-hotkey");
+    expect(contract.accessibility.focusRestorationTarget).toBe("trigger");
+    expect(contract.accessibility.liveRegionMode).toBe("assertive");
+    expect(contract.frameBudget.targetFps).toBe(60);
+    expect(contract.frameBudget.maxInteractivePanelsPerFrame).toBe(1);
+  });
 });

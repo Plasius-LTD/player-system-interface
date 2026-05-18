@@ -26,6 +26,12 @@ export interface PlayerSystemInterfaceContract {
   readonly frameBudget: InterfaceFrameBudget;
 }
 
+export interface PlayerSystemInterfaceContractInput {
+  readonly featureFlagId?: string;
+  readonly accessibility?: Partial<OverlayAccessibilityContract>;
+  readonly frameBudget?: Partial<InterfaceFrameBudget>;
+}
+
 export type PlayerSystemInterfaceMode = "ambient" | "focused" | "combat-safe";
 
 export type PlayerSystemPaneId =
@@ -98,7 +104,7 @@ export function createWorldSpacePanelDefinition(
 }
 
 export function createPlayerSystemInterfaceContract(
-  input: Partial<PlayerSystemInterfaceContract> = {}
+  input: PlayerSystemInterfaceContractInput = {}
 ): PlayerSystemInterfaceContract {
   return Object.freeze({
     featureFlagId:
