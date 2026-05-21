@@ -17,6 +17,10 @@ The package inherits the Player System package-family parent feature flag
 time because this repository defines reusable interface contracts rather than
 user-facing entitlement or navigation.
 
+The interface boundary also owns the explicit portability contract behind
+`isekai.player-system.runtime-portability.enabled`, including host adapter
+expectations and bounded multi-pane or multi-overlay composition assumptions.
+
 ## Consequences
 
 - Host runtimes can share a stable overlay contract.
@@ -24,3 +28,5 @@ user-facing entitlement or navigation.
 - Party/System composition work has an explicit interface boundary.
 - Rollback for early adoption remains centralized: disable
   `isekai.player-system.packages.enabled`.
+- Host-specific assumptions are surfaced as testable contract metadata instead
+  of remaining implicit in renderer implementations.
