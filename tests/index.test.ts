@@ -2,9 +2,13 @@ import {
   PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID,
   PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID,
   PLAYER_SYSTEM_RUNTIME_NFR_FEATURE_FLAG_ID,
+  PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID,
+  assessPlayerSystemInterfaceComposition,
   createPlayerSystemInterfaceContract,
+  createPlayerSystemInterfacePortabilityContract,
   createWorldSpacePanelDefinition,
   defaultPlayerSystemInterfaceContract,
+  defaultPlayerSystemInterfacePortabilityContract,
   isPlayerSystemInterfaceMode,
   packageDescriptor,
 } from "../src/index.js";
@@ -86,5 +90,59 @@ describe("@plasius/player-system-interface", () => {
     expect(contract.accessibility.liveRegionMode).toBe("assertive");
     expect(contract.frameBudget.targetFps).toBe(60);
     expect(contract.frameBudget.maxInteractivePanelsPerFrame).toBe(1);
+  });
+
+  it("exports a portability contract behind the inherited runtime-portability feature flag", () => {
+    expect(defaultPlayerSystemInterfacePortabilityContract.featureFlagId).toBe(
+      PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID
+    );
+    expect(
+      defaultPlayerSystemInterfacePortabilityContract.hostAdapters.supportedHosts
+    ).toEqual(["dom-overlay", "native-overlay", "headless-snapshot"]);
+    expect(
+      defaultPlayerSystemInterfacePortabilityContract.compositionScale.maxWorldPanels
+    ).toBe(6);
+  });
+
+  it("creates overridable portability contracts with frozen nested arrays", () => {
+    const contract = createPlayerSystemInterfacePortabilityContract({
+      hostAdapters: {
+        supportedHosts: ["headless-snapshot"],
+      },
+      compositionScale: {
+        maxFocusPanes: 2,
+      },
+    });
+
+    expect(contract.featureFlagId).toBe(
+      PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID
+    );
+    expect(contract.hostAdapters.supportedHosts).toEqual(["headless-snapshot"]);
+    expect(contract.compositionScale.maxFocusPanes).toBe(2);
+    expect(Object.isFrozen(contract.hostAdapters.supportedHosts)).toBe(true);
+  });
+
+  it("assesses multi-pane and multi-overlay samples against the documented scale assumptions", () => {
+    const accepted = assessPlayerSystemInterfaceComposition({
+      panelCount: 6,
+      focusPaneCount: 3,
+      alertMarkerCount: 8,
+      interactivePanelCount: 2,
+    });
+    const rejected = assessPlayerSystemInterfaceComposition({
+      panelCount: 7,
+      focusPaneCount: 4,
+      alertMarkerCount: 9,
+      interactivePanelCount: 3,
+    });
+
+    expect(accepted.accepted).toBe(true);
+    expect(rejected.accepted).toBe(false);
+    expect(rejected.violations).toEqual([
+      "panelCount",
+      "focusPaneCount",
+      "alertMarkerCount",
+      "interactivePanelCount",
+    ]);
   });
 });
