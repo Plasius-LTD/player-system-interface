@@ -7,3 +7,4 @@ All notable changes to this project will be documented in this file.
 - add overlay accessibility and frame-budget contracts under `isekai.player-system.runtime-nfr.enabled`
 - align bootstrap rollout documentation and exports on parent feature flag `isekai.player-system.packages.enabled`
 - accept partial nested interface-contract overrides from TypeScript consumers
+- add portable host-adapter and multi-overlay composition contracts under `isekai.player-system.runtime-portability.enabled`
