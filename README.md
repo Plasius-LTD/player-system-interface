@@ -28,6 +28,7 @@ npm install @plasius/player-system-interface
 - overlay accessibility contracts for keyboard, focus restoration, and announcements
 - frame-budget assumptions for diegetic panel updates
 - Party/System composition metadata
+- portable host-adapter seams and multi-overlay scale expectations
 
 It does not own gameplay orchestration or world authority.
 
@@ -43,6 +44,7 @@ node demo/example.mjs
 ```ts
 import {
   createPlayerSystemInterfaceContract,
+  createPlayerSystemInterfacePortabilityContract,
   createWorldSpacePanelDefinition,
   packageDescriptor,
 } from "@plasius/player-system-interface";
@@ -56,6 +58,9 @@ const panel = createWorldSpacePanelDefinition({
 
 console.log(packageDescriptor.packageName, panel.pane);
 console.log(createPlayerSystemInterfaceContract().frameBudget.maxFrameMs);
+console.log(
+  createPlayerSystemInterfacePortabilityContract().hostAdapters.supportedHosts
+);
 ```
 
 ## Interface NFR Contract
@@ -69,6 +74,18 @@ The inherited feature flag for this work is `isekai.player-system.runtime-nfr.en
 - live-region behavior for assistive announcements
 - per-frame interaction budgets for world-space panels
 - partial nested overrides for accessibility and frame-budget values
+
+## Interface Portability Contract
+
+The inherited feature flag for this work is `isekai.player-system.runtime-portability.enabled`.
+
+`defaultPlayerSystemInterfacePortabilityContract`,
+`createPlayerSystemInterfacePortabilityContract()`, and
+`assessPlayerSystemInterfaceComposition()` make these expectations explicit:
+
+- supported overlay hosts stay portable across DOM, native, and snapshot harnesses
+- required adapter capabilities are documented instead of assumed implicitly
+- multi-pane and multi-overlay compositions stay within bounded panel, alert, and focus budgets
 
 ## Governance
 
