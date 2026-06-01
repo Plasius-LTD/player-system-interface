@@ -122,6 +122,19 @@ describe("@plasius/player-system-interface", () => {
     expect(Object.isFrozen(contract.hostAdapters.supportedHosts)).toBe(true);
   });
 
+  it("keeps default supported hosts when only host capabilities change", () => {
+    const contract = createPlayerSystemInterfacePortabilityContract({
+      hostAdapters: {
+        requiredCapabilities: ["live-region"],
+      },
+    });
+
+    expect(contract.hostAdapters.supportedHosts).toEqual(
+      defaultPlayerSystemInterfacePortabilityContract.hostAdapters.supportedHosts
+    );
+    expect(contract.hostAdapters.requiredCapabilities).toEqual(["live-region"]);
+  });
+
   it("assesses multi-pane and multi-overlay samples against the documented scale assumptions", () => {
     const accepted = assessPlayerSystemInterfaceComposition({
       panelCount: 6,
