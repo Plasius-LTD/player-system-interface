@@ -215,6 +215,26 @@ describe("@plasius/player-system-interface", () => {
     expect(shell.targetPopups[0]?.requiresLineOfSight).toBe(true);
   });
 
+  it("creates default shells with frozen empty collections and reduced-combat overrides", () => {
+    const shell = createInterfaceShellDefinition({
+      featureFlagId: "isekai.player-system.interface.override",
+      reducedCombat: {
+        retainedSurfaceKinds: [],
+        maxInteractiveSurfaces: 0,
+      },
+    });
+
+    expect(shell.featureFlagId).toBe("isekai.player-system.interface.override");
+    expect(shell.focusPane).toBeUndefined();
+    expect(shell.surfaces).toEqual([]);
+    expect(shell.targetPopups).toEqual([]);
+    expect(shell.reducedCombat.retainedSurfaceKinds).toEqual([]);
+    expect(shell.reducedCombat.maxInteractiveSurfaces).toBe(0);
+    expect(Object.isFrozen(shell.surfaces)).toBe(true);
+    expect(Object.isFrozen(shell.targetPopups)).toBe(true);
+    expect(Object.isFrozen(shell.reducedCombat.retainedSurfaceKinds)).toBe(true);
+  });
+
   it("assesses coexistence and reduced-combat limits for Party/System shells", () => {
     const accepted = assessInterfaceShellDefinition(
       createInterfaceShellDefinition({
@@ -289,6 +309,57 @@ describe("@plasius/player-system-interface", () => {
       "focusPaneOwner",
       "focusPaneSurface",
       "interactiveSurfaceCount",
+    ]);
+  });
+
+  it("flags empty shells and mixed-owner shells without retained reduced-combat surfaces", () => {
+    const emptyShellAssessment = assessInterfaceShellDefinition(
+      createInterfaceShellDefinition()
+    );
+    const mixedOwnerAssessment = assessInterfaceShellDefinition(
+      createInterfaceShellDefinition({
+        surfaces: [
+          createInterfaceShellSurfaceDefinition({
+            surfaceId: "player-status-surface",
+            owner: "player-system",
+            kind: "world-panel",
+            anchorId: "player-anchor",
+            interactive: false,
+            priority: 4,
+            combatBehavior: "persist",
+          }),
+          createInterfaceShellSurfaceDefinition({
+            surfaceId: "party-status-surface",
+            owner: "party-system",
+            kind: "world-panel",
+            anchorId: "party-anchor",
+            interactive: false,
+            priority: 3,
+            combatBehavior: "persist",
+          }),
+        ],
+        targetPopups: [
+          createLineOfSightTargetPopupDefinition({
+            popupId: "missing-los-anchor",
+            owner: "player-system",
+            anchorId: "",
+            targetId: "forest-wolf",
+            summary: "Missing anchor should be rejected",
+            requiresLineOfSight: true,
+          }),
+        ],
+        reducedCombat: {
+          retainedSurfaceKinds: [],
+        },
+      })
+    );
+
+    expect(emptyShellAssessment.accepted).toBe(false);
+    expect(emptyShellAssessment.violations).toEqual(["surfaces"]);
+    expect(mixedOwnerAssessment.accepted).toBe(false);
+    expect(mixedOwnerAssessment.violations).toEqual([
+      "popup:missing-los-anchor",
+      "reducedCombat",
     ]);
   });
 });
