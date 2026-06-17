@@ -376,8 +376,9 @@ export function assessInterfaceShellDefinition(
 ): InterfaceContractAssessment {
   const violations: string[] = [];
   const ownerSet = new Set(shell.surfaces.map((surface) => surface.owner));
+  const retainedSurfaceKinds = new Set(shell.reducedCombat.retainedSurfaceKinds);
   const interactiveSurfaceCount = shell.surfaces.filter(
-    (surface) => surface.interactive
+    (surface) => surface.interactive && retainedSurfaceKinds.has(surface.kind)
   ).length;
   const focusPane = shell.focusPane;
 

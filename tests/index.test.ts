@@ -312,6 +312,31 @@ describe("@plasius/player-system-interface", () => {
     ]);
   });
 
+  it("counts only retained interactive surfaces against the combat-safe limit", () => {
+    const assessment = assessInterfaceShellDefinition(
+      createInterfaceShellDefinition({
+        surfaces: [
+          createInterfaceShellSurfaceDefinition({
+            surfaceId: "player-ledger-surface",
+            owner: "player-system",
+            kind: "world-panel",
+            anchorId: "ledger-anchor",
+            interactive: true,
+            priority: 5,
+            combatBehavior: "suspend",
+          }),
+        ],
+        reducedCombat: {
+          retainedSurfaceKinds: ["focus-pane"],
+          maxInteractiveSurfaces: 0,
+        },
+      })
+    );
+
+    expect(assessment.accepted).toBe(true);
+    expect(assessment.violations).toEqual([]);
+  });
+
   it("flags empty shells and mixed-owner shells without retained reduced-combat surfaces", () => {
     const emptyShellAssessment = assessInterfaceShellDefinition(
       createInterfaceShellDefinition()
