@@ -3,10 +3,16 @@ import {
   PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID,
   PLAYER_SYSTEM_RUNTIME_NFR_FEATURE_FLAG_ID,
   PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID,
+  assessInterfaceShellDefinition,
   assessPlayerSystemInterfaceComposition,
+  createFocusPaneShellDefinition,
+  createInterfaceShellDefinition,
+  createInterfaceShellSurfaceDefinition,
+  createLineOfSightTargetPopupDefinition,
   createPlayerSystemInterfaceContract,
   createPlayerSystemInterfacePortabilityContract,
   createWorldSpacePanelDefinition,
+  defaultReducedCombatOverlayPolicy,
   defaultPlayerSystemInterfaceContract,
   defaultPlayerSystemInterfacePortabilityContract,
   isPlayerSystemInterfaceMode,
@@ -20,7 +26,7 @@ describe("@plasius/player-system-interface", () => {
       PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID
     );
     expect(PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID).toBe(
-      PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID
+      "isekai.player-system.interface.enabled"
     );
   });
 
@@ -156,6 +162,133 @@ describe("@plasius/player-system-interface", () => {
       "focusPaneCount",
       "alertMarkerCount",
       "interactivePanelCount",
+    ]);
+  });
+
+  it("creates reusable focus-pane, popup, and shared shell definitions behind the story flag", () => {
+    const shell = createInterfaceShellDefinition({
+      surfaces: [
+        createInterfaceShellSurfaceDefinition({
+          surfaceId: "player-focus-surface",
+          owner: "player-system",
+          kind: "focus-pane",
+          anchorId: "focus-pane-anchor",
+          interactive: true,
+          priority: 10,
+          combatBehavior: "reduce",
+        }),
+        createInterfaceShellSurfaceDefinition({
+          surfaceId: "party-status-surface",
+          owner: "party-system",
+          kind: "world-panel",
+          anchorId: "party-strip-anchor",
+          interactive: false,
+          priority: 6,
+          combatBehavior: "persist",
+        }),
+      ],
+      focusPane: createFocusPaneShellDefinition({
+        panelId: "mission-focus",
+        owner: "player-system",
+        pane: "missions",
+        anchorId: "focus-pane-anchor",
+        heading: "Mission focus",
+        interactive: true,
+        combatBehavior: "reduce",
+      }),
+      targetPopups: [
+        createLineOfSightTargetPopupDefinition({
+          popupId: "nearby-threat",
+          owner: "player-system",
+          anchorId: "target-anchor",
+          targetId: "forest-wolf",
+          summary: "Hostile target in range",
+          requiresLineOfSight: true,
+          actionLabel: "Inspect",
+        }),
+      ],
+    });
+
+    expect(shell.featureFlagId).toBe(PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID);
+    expect(shell.reducedCombat).toEqual(defaultReducedCombatOverlayPolicy);
+    expect(shell.focusPane?.pane).toBe("missions");
+    expect(shell.targetPopups[0]?.requiresLineOfSight).toBe(true);
+  });
+
+  it("assesses coexistence and reduced-combat limits for Party/System shells", () => {
+    const accepted = assessInterfaceShellDefinition(
+      createInterfaceShellDefinition({
+        surfaces: [
+          createInterfaceShellSurfaceDefinition({
+            surfaceId: "player-focus-surface",
+            owner: "player-system",
+            kind: "focus-pane",
+            anchorId: "focus-pane-anchor",
+            interactive: true,
+            priority: 10,
+            combatBehavior: "reduce",
+          }),
+          createInterfaceShellSurfaceDefinition({
+            surfaceId: "party-status-surface",
+            owner: "party-system",
+            kind: "world-panel",
+            anchorId: "party-strip-anchor",
+            interactive: false,
+            priority: 6,
+            combatBehavior: "persist",
+          }),
+        ],
+        focusPane: createFocusPaneShellDefinition({
+          panelId: "mission-focus",
+          owner: "player-system",
+          pane: "missions",
+          anchorId: "focus-pane-anchor",
+          heading: "Mission focus",
+          interactive: true,
+          combatBehavior: "reduce",
+        }),
+      })
+    );
+    const rejected = assessInterfaceShellDefinition(
+      createInterfaceShellDefinition({
+        surfaces: [
+          createInterfaceShellSurfaceDefinition({
+            surfaceId: "player-focus-surface",
+            owner: "player-system",
+            kind: "focus-pane",
+            anchorId: "focus-pane-anchor",
+            interactive: true,
+            priority: 10,
+            combatBehavior: "reduce",
+          }),
+          createInterfaceShellSurfaceDefinition({
+            surfaceId: "extra-target-surface",
+            owner: "player-system",
+            kind: "target-popup",
+            anchorId: "target-anchor",
+            interactive: true,
+            priority: 8,
+            combatBehavior: "persist",
+          }),
+        ],
+        focusPane: createFocusPaneShellDefinition({
+          panelId: "mission-focus",
+          owner: "party-system",
+          pane: "missions",
+          anchorId: "focus-pane-anchor",
+          heading: "Mission focus",
+          interactive: true,
+          combatBehavior: "reduce",
+        }),
+      })
+    );
+
+    expect(accepted.accepted).toBe(true);
+    expect(rejected.accepted).toBe(false);
+    expect(rejected.violations).toEqual([
+      "focusPaneOwner",
+      "focusPaneSurface",
+      "interactiveSurfaceCount",
     ]);
   });
 });

@@ -43,20 +43,49 @@ node demo/example.mjs
 
 ```ts
 import {
+  createFocusPaneShellDefinition,
+  createInterfaceShellDefinition,
+  createInterfaceShellSurfaceDefinition,
+  createLineOfSightTargetPopupDefinition,
   createPlayerSystemInterfaceContract,
   createPlayerSystemInterfacePortabilityContract,
-  createWorldSpacePanelDefinition,
   packageDescriptor,
 } from "@plasius/player-system-interface";
 
-const panel = createWorldSpacePanelDefinition({
-  panelId: "mcc-focus",
-  pane: "mcc",
-  anchorId: "player-core",
-  interactive: true,
+const shell = createInterfaceShellDefinition({
+  surfaces: [
+    createInterfaceShellSurfaceDefinition({
+      surfaceId: "mission-focus-surface",
+      owner: "player-system",
+      kind: "focus-pane",
+      anchorId: "focus-pane-anchor",
+      interactive: true,
+      priority: 10,
+      combatBehavior: "reduce",
+    }),
+  ],
+  focusPane: createFocusPaneShellDefinition({
+    panelId: "mission-focus",
+    owner: "player-system",
+    pane: "missions",
+    anchorId: "focus-pane-anchor",
+    heading: "Mission focus",
+    interactive: true,
+    combatBehavior: "reduce",
+  }),
+  targetPopups: [
+    createLineOfSightTargetPopupDefinition({
+      popupId: "nearby-threat",
+      owner: "player-system",
+      anchorId: "target-anchor",
+      targetId: "forest-wolf",
+      summary: "Hostile target in range",
+      requiresLineOfSight: true,
+    }),
+  ],
 });
 
-console.log(packageDescriptor.packageName, panel.pane);
+console.log(packageDescriptor.packageName, shell.focusPane?.pane);
 console.log(createPlayerSystemInterfaceContract().frameBudget.maxFrameMs);
 console.log(
   createPlayerSystemInterfacePortabilityContract().hostAdapters.supportedHosts
@@ -65,7 +94,7 @@ console.log(
 
 ## Interface NFR Contract
 
-The inherited feature flag for this work is `isekai.player-system.runtime-nfr.enabled`.
+The inherited feature flag for this work is `isekai.player-system.interface.enabled`.
 
 `defaultPlayerSystemInterfaceContract` and `createPlayerSystemInterfaceContract()` make these host expectations explicit:
 
@@ -77,7 +106,7 @@ The inherited feature flag for this work is `isekai.player-system.runtime-nfr.en
 
 ## Interface Portability Contract
 
-The inherited feature flag for this work is `isekai.player-system.runtime-portability.enabled`.
+The inherited feature flag for this work is `isekai.player-system.interface.enabled`.
 
 `defaultPlayerSystemInterfacePortabilityContract`,
 `createPlayerSystemInterfacePortabilityContract()`, and
@@ -87,11 +116,22 @@ The inherited feature flag for this work is `isekai.player-system.runtime-portab
 - required adapter capabilities are documented instead of assumed implicitly
 - multi-pane and multi-overlay compositions stay within bounded panel, alert, and focus budgets
 
+## Interface Shell Contracts
+
+`createInterfaceShellDefinition()`, `createFocusPaneShellDefinition()`,
+`createLineOfSightTargetPopupDefinition()`, and
+`assessInterfaceShellDefinition()` cover the reusable shell surface for Story
+`#417`:
+
+- focused panes and line-of-sight target popups are first-class contracts
+- Party and Player System surfaces can coexist in one shell definition
+- reduced-combat behavior is explicit per surface and bounded by the shell policy
+
 ## Governance
 
 - ADRs: [docs/adrs](./docs/adrs)
 - TDRs: [docs/tdrs](./docs/tdrs)
 - Design notes: [docs/design](./docs/design)
-- Parent feature flag: `isekai.player-system.packages.enabled`
+- Parent feature flag: `isekai.player-system.interface.enabled`
 - Capability: not required for package bootstrap; interface adoption remains feature-flag led
-- Rollback: disable `isekai.player-system.packages.enabled` to halt package-family adoption without changing package code
+- Rollback: disable `isekai.player-system.interface.enabled` to halt package-family adoption without changing package code

@@ -78,6 +78,67 @@ export type PlayerSystemPaneId =
   | "tutorial"
   | "points-store";
 
+export type InterfaceShellOwner = "player-system" | "party-system";
+export type InterfaceShellSurfaceKind =
+  | "world-panel"
+  | "focus-pane"
+  | "target-popup"
+  | "alert-marker";
+export type InterfaceCombatBehavior = "persist" | "reduce" | "suspend";
+
+export interface InterfaceShellSurfaceDefinition {
+  readonly surfaceId: string;
+  readonly owner: InterfaceShellOwner;
+  readonly kind: InterfaceShellSurfaceKind;
+  readonly anchorId: string;
+  readonly interactive: boolean;
+  readonly priority: number;
+  readonly combatBehavior: InterfaceCombatBehavior;
+}
+
+export interface FocusPaneShellDefinition {
+  readonly panelId: string;
+  readonly owner: InterfaceShellOwner;
+  readonly pane: PlayerSystemPaneId;
+  readonly anchorId: string;
+  readonly heading: string;
+  readonly interactive: boolean;
+  readonly combatBehavior: InterfaceCombatBehavior;
+}
+
+export interface LineOfSightTargetPopupDefinition {
+  readonly popupId: string;
+  readonly owner: InterfaceShellOwner;
+  readonly anchorId: string;
+  readonly targetId: string;
+  readonly summary: string;
+  readonly requiresLineOfSight: boolean;
+  readonly actionLabel?: string;
+}
+
+export interface ReducedCombatOverlayPolicy {
+  readonly featureFlagId: string;
+  readonly mode: "combat-safe";
+  readonly retainedSurfaceKinds: readonly InterfaceShellSurfaceKind[];
+  readonly maxInteractiveSurfaces: number;
+}
+
+export interface InterfaceShellDefinition {
+  readonly featureFlagId: string;
+  readonly surfaces: readonly InterfaceShellSurfaceDefinition[];
+  readonly focusPane?: FocusPaneShellDefinition;
+  readonly targetPopups: readonly LineOfSightTargetPopupDefinition[];
+  readonly reducedCombat: ReducedCombatOverlayPolicy;
+}
+
+export interface InterfaceShellDefinitionInput {
+  readonly featureFlagId?: string;
+  readonly surfaces?: readonly InterfaceShellSurfaceDefinition[];
+  readonly focusPane?: FocusPaneShellDefinition;
+  readonly targetPopups?: readonly LineOfSightTargetPopupDefinition[];
+  readonly reducedCombat?: Partial<ReducedCombatOverlayPolicy>;
+}
+
 export interface WorldSpacePanelDefinition {
   readonly panelId: string;
   readonly pane: PlayerSystemPaneId;
@@ -107,14 +168,14 @@ export interface InterfaceContractAssessment {
 
 export const PLAYER_SYSTEM_INTERFACE_PACKAGE = "@plasius/player-system-interface";
 export const PLAYER_SYSTEM_INTERFACE_ENV_PREFIX = "PLAYER_SYSTEM_INTERFACE";
-export const PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID =
-  "isekai.player-system.packages.enabled";
 export const PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID =
-  PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID;
+  "isekai.player-system.interface.enabled";
+export const PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID =
+  PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID;
 export const PLAYER_SYSTEM_RUNTIME_NFR_FEATURE_FLAG_ID =
-  "isekai.player-system.runtime-nfr.enabled";
+  PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID;
 export const PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID =
-  "isekai.player-system.runtime-portability.enabled";
+  PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID;
 
 export const packageDescriptor: PackageDescriptor = Object.freeze({
   packageName: PLAYER_SYSTEM_INTERFACE_PACKAGE,
@@ -166,6 +227,18 @@ export const defaultPlayerSystemInterfacePortabilityContract: PlayerSystemInterf
       maxAlertMarkers: 8,
       maxInteractivePanelsPerFrame: 2,
     }),
+  });
+
+export const defaultReducedCombatOverlayPolicy: ReducedCombatOverlayPolicy =
+  Object.freeze({
+    featureFlagId: PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID,
+    mode: "combat-safe",
+    retainedSurfaceKinds: Object.freeze([
+      "alert-marker",
+      "target-popup",
+      "focus-pane",
+    ] satisfies InterfaceShellSurfaceKind[]),
+    maxInteractiveSurfaces: 1,
   });
 
 export function isPlayerSystemInterfaceMode(
@@ -230,6 +303,43 @@ export function createPlayerSystemInterfacePortabilityContract(
   });
 }
 
+export function createInterfaceShellSurfaceDefinition(
+  input: InterfaceShellSurfaceDefinition
+): InterfaceShellSurfaceDefinition {
+  return Object.freeze({ ...input });
+}
+
+export function createFocusPaneShellDefinition(
+  input: FocusPaneShellDefinition
+): FocusPaneShellDefinition {
+  return Object.freeze({ ...input });
+}
+
+export function createLineOfSightTargetPopupDefinition(
+  input: LineOfSightTargetPopupDefinition
+): LineOfSightTargetPopupDefinition {
+  return Object.freeze({ ...input });
+}
+
+export function createInterfaceShellDefinition(
+  input: InterfaceShellDefinitionInput = {}
+): InterfaceShellDefinition {
+  return Object.freeze({
+    featureFlagId: input.featureFlagId ?? PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID,
+    surfaces: Object.freeze([...(input.surfaces ?? [])]),
+    focusPane: input.focusPane ? Object.freeze({ ...input.focusPane }) : undefined,
+    targetPopups: Object.freeze([...(input.targetPopups ?? [])]),
+    reducedCombat: Object.freeze({
+      ...defaultReducedCombatOverlayPolicy,
+      ...input.reducedCombat,
+      retainedSurfaceKinds: Object.freeze([
+        ...(input.reducedCombat?.retainedSurfaceKinds ??
+          defaultReducedCombatOverlayPolicy.retainedSurfaceKinds),
+      ]),
+    }),
+  });
+}
+
 export function assessPlayerSystemInterfaceComposition(
   sample: WorldSpaceCompositionSample,
   contract: PlayerSystemInterfacePortabilityContract = defaultPlayerSystemInterfacePortabilityContract
@@ -253,6 +363,62 @@ export function assessPlayerSystemInterfaceComposition(
     contract.compositionScale.maxInteractivePanelsPerFrame
   ) {
     violations.push("interactivePanelCount");
+  }
+
+  return Object.freeze({
+    accepted: violations.length === 0,
+    violations: Object.freeze(violations),
+  });
+}
+
+export function assessInterfaceShellDefinition(
+  shell: InterfaceShellDefinition
+): InterfaceContractAssessment {
+  const violations: string[] = [];
+  const ownerSet = new Set(shell.surfaces.map((surface) => surface.owner));
+  const interactiveSurfaceCount = shell.surfaces.filter(
+    (surface) => surface.interactive
+  ).length;
+  const focusPane = shell.focusPane;
+
+  if (shell.surfaces.length === 0) {
+    violations.push("surfaces");
+  }
+
+  if (focusPane && !ownerSet.has(focusPane.owner)) {
+    violations.push("focusPaneOwner");
+  }
+
+  if (focusPane) {
+    const matchingSurface = shell.surfaces.find(
+      (surface) =>
+        surface.kind === "focus-pane" &&
+        surface.anchorId === focusPane.anchorId &&
+        surface.owner === focusPane.owner
+    );
+    if (!matchingSurface) {
+      violations.push("focusPaneSurface");
+    }
+  }
+
+  if (
+    interactiveSurfaceCount > shell.reducedCombat.maxInteractiveSurfaces
+  ) {
+    violations.push("interactiveSurfaceCount");
+  }
+
+  for (const popup of shell.targetPopups) {
+    if (popup.requiresLineOfSight && popup.anchorId.length === 0) {
+      violations.push(`popup:${popup.popupId}`);
+    }
+  }
+
+  if (
+    ownerSet.has("player-system") &&
+    ownerSet.has("party-system") &&
+    shell.reducedCombat.retainedSurfaceKinds.length === 0
+  ) {
+    violations.push("reducedCombat");
   }
 
   return Object.freeze({

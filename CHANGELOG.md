@@ -8,3 +8,5 @@ All notable changes to this project will be documented in this file.
 - align bootstrap rollout documentation and exports on parent feature flag `isekai.player-system.packages.enabled`
 - accept partial nested interface-contract overrides from TypeScript consumers
 - add portable host-adapter and multi-overlay composition contracts under `isekai.player-system.runtime-portability.enabled`
+- align all exported interface contracts to the inherited `isekai.player-system.interface.enabled` story flag
+- add reusable shell contracts for focus panes, line-of-sight target popups, shared Party/System surfaces, and reduced-combat policies
