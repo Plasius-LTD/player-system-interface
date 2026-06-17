@@ -341,6 +341,31 @@ describe("@plasius/player-system-interface", () => {
     const emptyShellAssessment = assessInterfaceShellDefinition(
       createInterfaceShellDefinition()
     );
+    const ignoredPopupAssessment = assessInterfaceShellDefinition(
+      createInterfaceShellDefinition({
+        surfaces: [
+          createInterfaceShellSurfaceDefinition({
+            surfaceId: "player-status-surface",
+            owner: "player-system",
+            kind: "world-panel",
+            anchorId: "player-anchor",
+            interactive: false,
+            priority: 4,
+            combatBehavior: "persist",
+          }),
+        ],
+        targetPopups: [
+          createLineOfSightTargetPopupDefinition({
+            popupId: "non-los-popup",
+            owner: "player-system",
+            anchorId: "",
+            targetId: "forest-wolf",
+            summary: "Anchor is optional when line of sight is not required",
+            requiresLineOfSight: false,
+          }),
+        ],
+      })
+    );
     const mixedOwnerAssessment = assessInterfaceShellDefinition(
       createInterfaceShellDefinition({
         surfaces: [
@@ -381,6 +406,8 @@ describe("@plasius/player-system-interface", () => {
 
     expect(emptyShellAssessment.accepted).toBe(false);
     expect(emptyShellAssessment.violations).toEqual(["surfaces"]);
+    expect(ignoredPopupAssessment.accepted).toBe(true);
+    expect(ignoredPopupAssessment.violations).toEqual([]);
     expect(mixedOwnerAssessment.accepted).toBe(false);
     expect(mixedOwnerAssessment.violations).toEqual([
       "popup:missing-los-anchor",
