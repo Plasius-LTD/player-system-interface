@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.5] - 2026-07-14
+
+- **Added**
   - add ambient, focused, and combat-safe shell state contracts with safe focus shifts
   - add renderer-agnostic 3D pane host definitions and localized ambient alert catalogs
 
@@ -43,3 +57,4 @@ All notable changes to this project will be documented in this file.
 
 [0.1.3]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v0.1.3
 [0.1.4]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v0.1.4
+[0.1.5]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v0.1.5
