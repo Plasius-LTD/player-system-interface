@@ -128,6 +128,8 @@ export interface InterfaceShellDefinition {
   readonly surfaces: readonly InterfaceShellSurfaceDefinition[];
   readonly focusPane?: FocusPaneShellDefinition;
   readonly targetPopups: readonly LineOfSightTargetPopupDefinition[];
+  readonly paneHosts: readonly ThreeDPaneHostDefinition[];
+  readonly ambientAlerts: readonly LocalizedAmbientAlertDefinition[];
   readonly reducedCombat: ReducedCombatOverlayPolicy;
 }
 
@@ -136,7 +138,55 @@ export interface InterfaceShellDefinitionInput {
   readonly surfaces?: readonly InterfaceShellSurfaceDefinition[];
   readonly focusPane?: FocusPaneShellDefinition;
   readonly targetPopups?: readonly LineOfSightTargetPopupDefinition[];
+  readonly paneHosts?: readonly ThreeDPaneHostDefinition[];
+  readonly ambientAlerts?: readonly LocalizedAmbientAlertDefinition[];
   readonly reducedCombat?: Partial<ReducedCombatOverlayPolicy>;
+}
+
+export type InterfaceFocusShiftReason =
+  | "keyboard"
+  | "direct-hotkey"
+  | "restore"
+  | "system";
+
+export interface InterfaceFocusShift {
+  readonly fromSurfaceId?: string;
+  readonly toSurfaceId: string;
+  readonly reason: InterfaceFocusShiftReason;
+}
+
+export interface InterfaceShellStateDefinition {
+  readonly featureFlagId: string;
+  readonly mode: PlayerSystemInterfaceMode;
+  readonly focusedSurfaceId?: string;
+  readonly visibleSurfaceIds: readonly string[];
+  readonly focusShift?: InterfaceFocusShift;
+}
+
+export interface InterfaceShellStateInput {
+  readonly mode: PlayerSystemInterfaceMode;
+  readonly focusedSurfaceId?: string;
+}
+
+export interface ThreeDPaneHostDefinition {
+  readonly hostId: string;
+  readonly owner: InterfaceShellOwner;
+  readonly pane: PlayerSystemPaneId;
+  readonly surfaceId: string;
+  readonly anchorId: string;
+  readonly supportedHosts: readonly OverlayHostKind[];
+}
+
+export type AmbientAlertSeverity = "info" | "warning" | "danger";
+
+export interface LocalizedAmbientAlertDefinition {
+  readonly alertId: string;
+  readonly owner: InterfaceShellOwner;
+  readonly severity: AmbientAlertSeverity;
+  readonly anchorId: string;
+  readonly messageKey: string;
+  readonly localizedMessages: Readonly<Record<string, string>>;
+  readonly liveRegionMode: "polite" | "assertive";
 }
 
 export interface WorldSpacePanelDefinition {
@@ -150,7 +200,7 @@ export interface WorldSpacePanelDefinition {
 
 export interface OverlayAlertMarker {
   readonly markerId: string;
-  readonly severity: "info" | "warning" | "danger";
+  readonly severity: AmbientAlertSeverity;
   readonly anchorId: string;
 }
 
@@ -321,6 +371,24 @@ export function createLineOfSightTargetPopupDefinition(
   return Object.freeze({ ...input });
 }
 
+export function createThreeDPaneHostDefinition(
+  input: ThreeDPaneHostDefinition
+): ThreeDPaneHostDefinition {
+  return Object.freeze({
+    ...input,
+    supportedHosts: Object.freeze([...input.supportedHosts]),
+  });
+}
+
+export function createLocalizedAmbientAlertDefinition(
+  input: LocalizedAmbientAlertDefinition
+): LocalizedAmbientAlertDefinition {
+  return Object.freeze({
+    ...input,
+    localizedMessages: Object.freeze({ ...input.localizedMessages }),
+  });
+}
+
 export function createInterfaceShellDefinition(
   input: InterfaceShellDefinitionInput = {}
 ): InterfaceShellDefinition {
@@ -329,6 +397,8 @@ export function createInterfaceShellDefinition(
     surfaces: Object.freeze([...(input.surfaces ?? [])]),
     focusPane: input.focusPane ? Object.freeze({ ...input.focusPane }) : undefined,
     targetPopups: Object.freeze([...(input.targetPopups ?? [])]),
+    paneHosts: Object.freeze([...(input.paneHosts ?? [])]),
+    ambientAlerts: Object.freeze([...(input.ambientAlerts ?? [])]),
     reducedCombat: Object.freeze({
       ...defaultReducedCombatOverlayPolicy,
       ...input.reducedCombat,
@@ -338,6 +408,66 @@ export function createInterfaceShellDefinition(
       ]),
     }),
   });
+}
+
+export function createInterfaceShellState(
+  shell: InterfaceShellDefinition,
+  input: InterfaceShellStateInput
+): InterfaceShellStateDefinition {
+  const retainedSurfaceKinds = new Set(
+    shell.reducedCombat.retainedSurfaceKinds
+  );
+  const visibleSurfaceIds = shell.surfaces
+    .filter(
+      (surface) =>
+        input.mode !== "combat-safe" ||
+        (surface.combatBehavior !== "suspend" &&
+          retainedSurfaceKinds.has(surface.kind))
+    )
+    .map((surface) => surface.surfaceId);
+
+  if (
+    input.focusedSurfaceId &&
+    !visibleSurfaceIds.includes(input.focusedSurfaceId)
+  ) {
+    throw new RangeError(
+      `Focused surface '${input.focusedSurfaceId}' is not visible in ${input.mode} mode`
+    );
+  }
+
+  return Object.freeze({
+    featureFlagId: shell.featureFlagId,
+    mode: input.mode,
+    focusedSurfaceId:
+      input.mode === "focused" ? input.focusedSurfaceId : undefined,
+    visibleSurfaceIds: Object.freeze(visibleSurfaceIds),
+  });
+}
+
+export function applyInterfaceShellFocusShift(
+  state: InterfaceShellStateDefinition,
+  focusShift: InterfaceFocusShift
+): InterfaceShellStateDefinition {
+  if (!state.visibleSurfaceIds.includes(focusShift.toSurfaceId)) {
+    throw new RangeError(
+      `Focused surface '${focusShift.toSurfaceId}' is not visible in ${state.mode} mode`
+    );
+  }
+
+  return Object.freeze({
+    ...state,
+    mode: "focused",
+    focusedSurfaceId: focusShift.toSurfaceId,
+    focusShift: Object.freeze({ ...focusShift }),
+  });
+}
+
+export function resolveLocalizedAmbientAlertMessage(
+  alert: LocalizedAmbientAlertDefinition,
+  locale: string,
+  fallbackLocale = "en-GB"
+): string | undefined {
+  return alert.localizedMessages[locale] ?? alert.localizedMessages[fallbackLocale];
 }
 
 export function assessPlayerSystemInterfaceComposition(
@@ -411,6 +541,24 @@ export function assessInterfaceShellDefinition(
   for (const popup of shell.targetPopups) {
     if (popup.requiresLineOfSight && popup.anchorId.length === 0) {
       violations.push(`popup:${popup.popupId}`);
+    }
+  }
+
+  for (const paneHost of shell.paneHosts) {
+    const matchingSurface = shell.surfaces.find(
+      (surface) =>
+        surface.surfaceId === paneHost.surfaceId &&
+        surface.owner === paneHost.owner &&
+        surface.anchorId === paneHost.anchorId
+    );
+    if (!matchingSurface) {
+      violations.push(`paneHost:${paneHost.hostId}`);
+    }
+  }
+
+  for (const alert of shell.ambientAlerts) {
+    if (Object.keys(alert.localizedMessages).length === 0) {
+      violations.push(`alert:${alert.alertId}`);
     }
   }
 

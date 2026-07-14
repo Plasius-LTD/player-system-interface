@@ -5,18 +5,23 @@ import {
   PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID,
   assessInterfaceShellDefinition,
   assessPlayerSystemInterfaceComposition,
+  applyInterfaceShellFocusShift,
   createFocusPaneShellDefinition,
   createInterfaceShellDefinition,
+  createInterfaceShellState,
   createInterfaceShellSurfaceDefinition,
+  createLocalizedAmbientAlertDefinition,
   createLineOfSightTargetPopupDefinition,
   createPlayerSystemInterfaceContract,
   createPlayerSystemInterfacePortabilityContract,
+  createThreeDPaneHostDefinition,
   createWorldSpacePanelDefinition,
   defaultReducedCombatOverlayPolicy,
   defaultPlayerSystemInterfaceContract,
   defaultPlayerSystemInterfacePortabilityContract,
   isPlayerSystemInterfaceMode,
   packageDescriptor,
+  resolveLocalizedAmbientAlertMessage,
 } from "../src/index.js";
 
 describe("@plasius/player-system-interface", () => {
@@ -413,5 +418,173 @@ describe("@plasius/player-system-interface", () => {
       "popup:missing-los-anchor",
       "reducedCombat",
     ]);
+  });
+
+  it("represents ambient, focused, and combat-safe state transitions", () => {
+    const shell = createInterfaceShellDefinition({
+      surfaces: [
+        createInterfaceShellSurfaceDefinition({
+          surfaceId: "focus-pane",
+          owner: "player-system",
+          kind: "focus-pane",
+          anchorId: "focus-anchor",
+          interactive: true,
+          priority: 10,
+          combatBehavior: "reduce",
+        }),
+        createInterfaceShellSurfaceDefinition({
+          surfaceId: "ambient-panel",
+          owner: "party-system",
+          kind: "world-panel",
+          anchorId: "ambient-anchor",
+          interactive: false,
+          priority: 4,
+          combatBehavior: "persist",
+        }),
+        createInterfaceShellSurfaceDefinition({
+          surfaceId: "suspended-panel",
+          owner: "player-system",
+          kind: "world-panel",
+          anchorId: "suspended-anchor",
+          interactive: true,
+          priority: 3,
+          combatBehavior: "suspend",
+        }),
+      ],
+      reducedCombat: {
+        retainedSurfaceKinds: ["focus-pane", "world-panel"],
+      },
+    });
+
+    const ambient = createInterfaceShellState(shell, { mode: "ambient" });
+    const focused = createInterfaceShellState(shell, {
+      mode: "focused",
+      focusedSurfaceId: "focus-pane",
+    });
+    const combatSafe = createInterfaceShellState(shell, {
+      mode: "combat-safe",
+    });
+
+    expect(ambient.visibleSurfaceIds).toEqual([
+      "focus-pane",
+      "ambient-panel",
+      "suspended-panel",
+    ]);
+    expect(focused.focusedSurfaceId).toBe("focus-pane");
+    expect(combatSafe.visibleSurfaceIds).toEqual([
+      "focus-pane",
+      "ambient-panel",
+    ]);
+    expect(() =>
+      createInterfaceShellState(shell, {
+        mode: "combat-safe",
+        focusedSurfaceId: "suspended-panel",
+      })
+    ).toThrow("not visible");
+
+    const shifted = applyInterfaceShellFocusShift(focused, {
+      fromSurfaceId: "focus-pane",
+      toSurfaceId: "ambient-panel",
+      reason: "keyboard",
+    });
+
+    expect(shifted.mode).toBe("focused");
+    expect(shifted.focusedSurfaceId).toBe("ambient-panel");
+    expect(shifted.focusShift?.reason).toBe("keyboard");
+    expect(() =>
+      applyInterfaceShellFocusShift(combatSafe, {
+        toSurfaceId: "suspended-panel",
+        reason: "system",
+      })
+    ).toThrow("not visible");
+  });
+
+  it("hosts 3D panes and resolves localized ambient alert messages", () => {
+    const paneHost = createThreeDPaneHostDefinition({
+      hostId: "world-pane-host",
+      owner: "player-system",
+      pane: "missions",
+      surfaceId: "mission-pane",
+      anchorId: "world-anchor",
+      supportedHosts: ["native-overlay", "headless-snapshot"],
+    });
+    const alert = createLocalizedAmbientAlertDefinition({
+      alertId: "low-health",
+      owner: "player-system",
+      severity: "warning",
+      anchorId: "player-anchor",
+      messageKey: "player.lowHealth",
+      liveRegionMode: "polite",
+      localizedMessages: {
+        "en-GB": "Health is low",
+        "fr-FR": "La santé est faible",
+      },
+    });
+    const shell = createInterfaceShellDefinition({
+      surfaces: [
+        createInterfaceShellSurfaceDefinition({
+          surfaceId: "mission-pane",
+          owner: "player-system",
+          kind: "focus-pane",
+          anchorId: "world-anchor",
+          interactive: true,
+          priority: 10,
+          combatBehavior: "reduce",
+        }),
+      ],
+      paneHosts: [paneHost],
+      ambientAlerts: [alert],
+    });
+
+    expect(shell.paneHosts).toEqual([paneHost]);
+    expect(resolveLocalizedAmbientAlertMessage(alert, "fr-FR")).toBe(
+      "La santé est faible"
+    );
+    expect(resolveLocalizedAmbientAlertMessage(alert, "de-DE")).toBe(
+      "Health is low"
+    );
+    expect(assessInterfaceShellDefinition(shell).accepted).toBe(true);
+  });
+
+  it("rejects pane hosts without matching shell surfaces and empty alerts", () => {
+    const shell = createInterfaceShellDefinition({
+      surfaces: [
+        createInterfaceShellSurfaceDefinition({
+          surfaceId: "existing-surface",
+          owner: "player-system",
+          kind: "world-panel",
+          anchorId: "existing-anchor",
+          interactive: false,
+          priority: 1,
+          combatBehavior: "persist",
+        }),
+      ],
+      paneHosts: [
+        createThreeDPaneHostDefinition({
+          hostId: "missing-surface-host",
+          owner: "player-system",
+          pane: "missions",
+          surfaceId: "missing-surface",
+          anchorId: "missing-anchor",
+          supportedHosts: ["dom-overlay"],
+        }),
+      ],
+      ambientAlerts: [
+        createLocalizedAmbientAlertDefinition({
+          alertId: "missing-copy",
+          owner: "player-system",
+          severity: "info",
+          anchorId: "existing-anchor",
+          messageKey: "missing.copy",
+          liveRegionMode: "polite",
+          localizedMessages: {},
+        }),
+      ],
+    });
+
+    expect(assessInterfaceShellDefinition(shell)).toEqual({
+      accepted: false,
+      violations: ["paneHost:missing-surface-host", "alert:missing-copy"],
+    });
   });
 });

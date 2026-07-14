@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - **Added**
-  - (placeholder)
+  - add ambient, focused, and combat-safe shell state contracts with safe focus shifts
+  - add renderer-agnostic 3D pane host definitions and localized ambient alert catalogs
 
 - **Changed**
   - (placeholder)
