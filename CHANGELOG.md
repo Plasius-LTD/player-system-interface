@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - **Added**
   - add ambient, focused, and combat-safe shell state contracts with safe focus shifts
   - add renderer-agnostic 3D pane host definitions and localized ambient alert catalogs
+  - add self-state and line-of-sight identity projection contracts with bounded readable facts
 
 - **Changed**
   - (placeholder)
