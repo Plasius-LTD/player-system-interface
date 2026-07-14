@@ -127,6 +127,23 @@ The inherited feature flag for this work is `isekai.player-system.interface.enab
 - Party and Player System surfaces can coexist in one shell definition
 - reduced-combat behavior is explicit per surface and bounded by the shell policy
 
+## Shell State, 3D Panes, and Ambient Alerts
+
+`createInterfaceShellState()` represents ambient, focused, and combat-safe
+visibility without coupling the package to a renderer. Combat-safe state keeps
+only retained surface kinds and never exposes suspended surfaces. Use
+`applyInterfaceShellFocusShift()` for keyboard, direct-hotkey, restore, or
+system focus changes; shifts to hidden surfaces are rejected.
+
+`createThreeDPaneHostDefinition()` associates a pane with a shell surface,
+world anchor, and supported host adapters. It describes the host boundary but
+does not own rendering or scene orchestration.
+
+`createLocalizedAmbientAlertDefinition()` stores an allowlisted locale-to-copy
+map with an explicit live-region mode. Resolve the best available copy with
+`resolveLocalizedAmbientAlertMessage()` and validate pane/alert composition with
+`assessInterfaceShellDefinition()`.
+
 ## Governance
 
 - ADRs: [docs/adrs](./docs/adrs)

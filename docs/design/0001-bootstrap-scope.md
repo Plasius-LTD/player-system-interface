@@ -12,6 +12,14 @@ Provide a package-standard bootstrap for the Player System interface boundary.
 - overlay portability contract and composition assessment helper
 - demo and test scaffolding
 
+## Shell Extension
+
+The shell boundary also represents ambient, focused, and combat-safe state,
+safe focus transitions, renderer-agnostic 3D pane hosts, and localized ambient
+alert catalogs. These remain contracts and validation helpers; rendering,
+scene orchestration, localization service ownership, and gameplay authority
+remain outside this package.
+
 ## Exclusions
 
 - gameplay orchestration
