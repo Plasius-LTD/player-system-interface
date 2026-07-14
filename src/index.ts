@@ -83,8 +83,64 @@ export type InterfaceShellSurfaceKind =
   | "world-panel"
   | "focus-pane"
   | "target-popup"
-  | "alert-marker";
+  | "alert-marker"
+  | "identity-overlay";
 export type InterfaceCombatBehavior = "persist" | "reduce" | "suspend";
+
+export type IdentityProjectionRelation =
+  | "self"
+  | "allied"
+  | "neutral"
+  | "unknown"
+  | "unfriendly";
+export type IdentityProjectionInvocation =
+  | "self-state"
+  | "identity-sweep"
+  | "spell-targeting";
+export type IdentityProjectionReadConfidence =
+  | "complete"
+  | "partial"
+  | "fuzzy"
+  | "withheld";
+export type IdentityProjectionPresentation = "full" | "condensed";
+export type IdentityProjectionFact =
+  | "display-name"
+  | "relation"
+  | "health-band"
+  | "status-summary"
+  | "threat-band"
+  | "targeting-affordance";
+
+export interface IdentityStatusOverlayBaseDefinition {
+  readonly overlayId: string;
+  readonly surfaceId: string;
+  readonly readConfidence: IdentityProjectionReadConfidence;
+  readonly perceivableFacts: readonly IdentityProjectionFact[];
+  readonly readableFacts: readonly IdentityProjectionFact[];
+  readonly presentation: IdentityProjectionPresentation;
+}
+
+export interface IdentitySelfStateOverlayDefinition
+  extends IdentityStatusOverlayBaseDefinition {
+  readonly targetKind: "self";
+  readonly relation: "self";
+  readonly invocation: "self-state";
+  readonly requiresLineOfSight: false;
+  readonly targetId?: never;
+}
+
+export interface IdentityTargetProjectionOverlayDefinition
+  extends IdentityStatusOverlayBaseDefinition {
+  readonly targetKind: "external";
+  readonly targetId: string;
+  readonly relation: Exclude<IdentityProjectionRelation, "self">;
+  readonly invocation: Exclude<IdentityProjectionInvocation, "self-state">;
+  readonly requiresLineOfSight: true;
+}
+
+export type IdentityStatusOverlayDefinition =
+  | IdentitySelfStateOverlayDefinition
+  | IdentityTargetProjectionOverlayDefinition;
 
 export interface InterfaceShellSurfaceDefinition {
   readonly surfaceId: string;
@@ -128,6 +184,7 @@ export interface InterfaceShellDefinition {
   readonly surfaces: readonly InterfaceShellSurfaceDefinition[];
   readonly focusPane?: FocusPaneShellDefinition;
   readonly targetPopups: readonly LineOfSightTargetPopupDefinition[];
+  readonly identityOverlays: readonly IdentityStatusOverlayDefinition[];
   readonly paneHosts: readonly ThreeDPaneHostDefinition[];
   readonly ambientAlerts: readonly LocalizedAmbientAlertDefinition[];
   readonly reducedCombat: ReducedCombatOverlayPolicy;
@@ -138,6 +195,7 @@ export interface InterfaceShellDefinitionInput {
   readonly surfaces?: readonly InterfaceShellSurfaceDefinition[];
   readonly focusPane?: FocusPaneShellDefinition;
   readonly targetPopups?: readonly LineOfSightTargetPopupDefinition[];
+  readonly identityOverlays?: readonly IdentityStatusOverlayDefinition[];
   readonly paneHosts?: readonly ThreeDPaneHostDefinition[];
   readonly ambientAlerts?: readonly LocalizedAmbientAlertDefinition[];
   readonly reducedCombat?: Partial<ReducedCombatOverlayPolicy>;
@@ -226,6 +284,8 @@ export const PLAYER_SYSTEM_RUNTIME_NFR_FEATURE_FLAG_ID =
   PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID;
 export const PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID =
   PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID;
+export const PLAYER_SYSTEM_IDENTITY_FEATURE_FLAG_ID =
+  "isekai.player-system.identity.enabled";
 
 export const packageDescriptor: PackageDescriptor = Object.freeze({
   packageName: PLAYER_SYSTEM_INTERFACE_PACKAGE,
@@ -287,6 +347,7 @@ export const defaultReducedCombatOverlayPolicy: ReducedCombatOverlayPolicy =
       "alert-marker",
       "target-popup",
       "focus-pane",
+      "identity-overlay",
     ] satisfies InterfaceShellSurfaceKind[]),
     maxInteractiveSurfaces: 1,
   });
@@ -371,6 +432,16 @@ export function createLineOfSightTargetPopupDefinition(
   return Object.freeze({ ...input });
 }
 
+export function createIdentityStatusOverlayDefinition(
+  input: IdentityStatusOverlayDefinition
+): IdentityStatusOverlayDefinition {
+  return Object.freeze({
+    ...input,
+    perceivableFacts: Object.freeze([...input.perceivableFacts]),
+    readableFacts: Object.freeze([...input.readableFacts]),
+  });
+}
+
 export function createThreeDPaneHostDefinition(
   input: ThreeDPaneHostDefinition
 ): ThreeDPaneHostDefinition {
@@ -397,6 +468,7 @@ export function createInterfaceShellDefinition(
     surfaces: Object.freeze([...(input.surfaces ?? [])]),
     focusPane: input.focusPane ? Object.freeze({ ...input.focusPane }) : undefined,
     targetPopups: Object.freeze([...(input.targetPopups ?? [])]),
+    identityOverlays: Object.freeze([...(input.identityOverlays ?? [])]),
     paneHosts: Object.freeze([...(input.paneHosts ?? [])]),
     ambientAlerts: Object.freeze([...(input.ambientAlerts ?? [])]),
     reducedCombat: Object.freeze({
@@ -470,6 +542,45 @@ export function resolveLocalizedAmbientAlertMessage(
   return alert.localizedMessages[locale] ?? alert.localizedMessages[fallbackLocale];
 }
 
+export function assessIdentityStatusOverlayDefinition(
+  overlay: IdentityStatusOverlayDefinition
+): InterfaceContractAssessment {
+  const violations: string[] = [];
+  const perceivableFacts = new Set(overlay.perceivableFacts);
+
+  if (overlay.readableFacts.some((fact) => !perceivableFacts.has(fact))) {
+    violations.push("readableFacts");
+  }
+
+  if (overlay.readConfidence === "withheld" && overlay.readableFacts.length > 0) {
+    violations.push("withheldRead");
+  }
+
+  if (overlay.targetKind === "self") {
+    if (overlay.relation !== "self") {
+      violations.push("selfRelation");
+    }
+    if (overlay.invocation !== "self-state") {
+      violations.push("selfInvocation");
+    }
+    if (overlay.requiresLineOfSight) {
+      violations.push("selfLineOfSight");
+    }
+  } else {
+    if (overlay.targetId.length === 0) {
+      violations.push("targetId");
+    }
+    if (!overlay.requiresLineOfSight) {
+      violations.push("lineOfSight");
+    }
+  }
+
+  return Object.freeze({
+    accepted: violations.length === 0,
+    violations: Object.freeze(violations),
+  });
+}
+
 export function assessPlayerSystemInterfaceComposition(
   sample: WorldSpaceCompositionSample,
   contract: PlayerSystemInterfacePortabilityContract = defaultPlayerSystemInterfacePortabilityContract
@@ -541,6 +652,22 @@ export function assessInterfaceShellDefinition(
   for (const popup of shell.targetPopups) {
     if (popup.requiresLineOfSight && popup.anchorId.length === 0) {
       violations.push(`popup:${popup.popupId}`);
+    }
+  }
+
+  for (const overlay of shell.identityOverlays) {
+    const identityAssessment = assessIdentityStatusOverlayDefinition(overlay);
+    for (const violation of identityAssessment.violations) {
+      violations.push(`identityOverlay:${overlay.overlayId}:${violation}`);
+    }
+
+    const matchingSurface = shell.surfaces.find(
+      (surface) =>
+        surface.surfaceId === overlay.surfaceId &&
+        surface.kind === "identity-overlay"
+    );
+    if (!matchingSurface) {
+      violations.push(`identityOverlaySurface:${overlay.overlayId}`);
     }
   }
 

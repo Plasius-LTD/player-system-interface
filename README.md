@@ -25,6 +25,7 @@ npm install @plasius/player-system-interface
 - focus panes and combat-safe reductions
 - world-space overlay panel definitions
 - target popup anchors and alert markers
+- self-state and line-of-sight identity projection overlays
 - overlay accessibility contracts for keyboard, focus restoration, and announcements
 - frame-budget assumptions for diegetic panel updates
 - Party/System composition metadata
@@ -127,6 +128,24 @@ The inherited feature flag for this work is `isekai.player-system.interface.enab
 - Party and Player System surfaces can coexist in one shell definition
 - reduced-combat behavior is explicit per surface and bounded by the shell policy
 
+## Identity Status Overlays
+
+`createIdentityStatusOverlayDefinition()` represents the Identity System's
+self-state and explicit external target projections. The inherited feature
+flag is `isekai.player-system.identity.enabled`.
+
+- Self-state overlays use the `self-state` invocation and never require line of
+  sight.
+- External overlays require an explicit `identity-sweep` or `spell-targeting`
+  invocation and line of sight.
+- `allied`, `neutral`, `unknown`, and `unfriendly` are operational targeting
+  categories, not absolute moral truth labels.
+- `readableFacts` must be a subset of `perceivableFacts`; use `partial`,
+  `fuzzy`, or `withheld` confidence when identity truth is incomplete.
+- Add identity overlays to a shell with an `identity-overlay` surface and use
+  `assessIdentityStatusOverlayDefinition()` / `assessInterfaceShellDefinition()`
+  before rendering.
+
 ## Shell State, 3D Panes, and Ambient Alerts
 
 `createInterfaceShellState()` represents ambient, focused, and combat-safe
@@ -152,3 +171,4 @@ map with an explicit live-region mode. Resolve the best available copy with
 - Parent feature flag: `isekai.player-system.interface.enabled`
 - Capability: not required for package bootstrap; interface adoption remains feature-flag led
 - Rollback: disable `isekai.player-system.interface.enabled` to halt package-family adoption without changing package code
+- Identity rollback: disable `isekai.player-system.identity.enabled` to stop identity projection adoption without changing package code

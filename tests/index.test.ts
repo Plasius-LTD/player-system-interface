@@ -3,13 +3,16 @@ import {
   PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID,
   PLAYER_SYSTEM_RUNTIME_NFR_FEATURE_FLAG_ID,
   PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID,
+  PLAYER_SYSTEM_IDENTITY_FEATURE_FLAG_ID,
   assessInterfaceShellDefinition,
+  assessIdentityStatusOverlayDefinition,
   assessPlayerSystemInterfaceComposition,
   applyInterfaceShellFocusShift,
   createFocusPaneShellDefinition,
   createInterfaceShellDefinition,
   createInterfaceShellState,
   createInterfaceShellSurfaceDefinition,
+  createIdentityStatusOverlayDefinition,
   createLocalizedAmbientAlertDefinition,
   createLineOfSightTargetPopupDefinition,
   createPlayerSystemInterfaceContract,
@@ -47,6 +50,77 @@ describe("@plasius/player-system-interface", () => {
 
     expect(panel.anchorId).toBe("player");
     expect(panel.accessibilityLabel).toBe("Player status");
+  });
+
+  it("represents self-state and differentiated target projection surfaces", () => {
+    const selfState = createIdentityStatusOverlayDefinition({
+      overlayId: "self-state",
+      surfaceId: "identity-self-surface",
+      targetKind: "self",
+      relation: "self",
+      invocation: "self-state",
+      requiresLineOfSight: false,
+      readConfidence: "complete",
+      perceivableFacts: ["display-name", "health-band", "status-summary"],
+      readableFacts: ["display-name", "health-band", "status-summary"],
+      presentation: "full",
+    });
+    const alliedTarget = createIdentityStatusOverlayDefinition({
+      overlayId: "allied-target",
+      surfaceId: "identity-allied-surface",
+      targetKind: "external",
+      targetId: "party-member",
+      relation: "allied",
+      invocation: "spell-targeting",
+      requiresLineOfSight: true,
+      readConfidence: "partial",
+      perceivableFacts: ["relation", "health-band", "targeting-affordance"],
+      readableFacts: ["relation", "targeting-affordance"],
+      presentation: "condensed",
+    });
+    const unfriendlyTarget = createIdentityStatusOverlayDefinition({
+      ...alliedTarget,
+      overlayId: "unfriendly-target",
+      surfaceId: "identity-unfriendly-surface",
+      targetKind: "external",
+      targetId: "forest-wolf",
+      relation: "unfriendly",
+      invocation: "identity-sweep",
+      requiresLineOfSight: true,
+    });
+
+    expect(PLAYER_SYSTEM_IDENTITY_FEATURE_FLAG_ID).toBe(
+      "isekai.player-system.identity.enabled"
+    );
+    expect(selfState.relation).toBe("self");
+    expect(alliedTarget.relation).toBe("allied");
+    expect(unfriendlyTarget.relation).toBe("unfriendly");
+    expect(assessIdentityStatusOverlayDefinition(selfState).accepted).toBe(true);
+    expect(assessIdentityStatusOverlayDefinition(alliedTarget).accepted).toBe(
+      true
+    );
+    expect(Object.isFrozen(alliedTarget.readableFacts)).toBe(true);
+  });
+
+  it("rejects identity reads that exceed perceivable truth", () => {
+    const overread = createIdentityStatusOverlayDefinition({
+      overlayId: "overread-target",
+      surfaceId: "identity-target-surface",
+      targetKind: "external",
+      targetId: "unknown-entity",
+      relation: "unknown",
+      invocation: "identity-sweep",
+      requiresLineOfSight: true,
+      readConfidence: "fuzzy",
+      perceivableFacts: ["relation"],
+      readableFacts: ["relation", "status-summary"],
+      presentation: "condensed",
+    });
+
+    expect(assessIdentityStatusOverlayDefinition(overread)).toEqual({
+      accepted: false,
+      violations: ["readableFacts"],
+    });
   });
 
   it("guards valid interface modes", () => {
@@ -218,6 +292,64 @@ describe("@plasius/player-system-interface", () => {
     expect(shell.reducedCombat).toEqual(defaultReducedCombatOverlayPolicy);
     expect(shell.focusPane?.pane).toBe("missions");
     expect(shell.targetPopups[0]?.requiresLineOfSight).toBe(true);
+  });
+
+  it("assesses identity overlays only when their shell surfaces and reads are valid", () => {
+    const shell = createInterfaceShellDefinition({
+      surfaces: [
+        createInterfaceShellSurfaceDefinition({
+          surfaceId: "identity-self-surface",
+          owner: "player-system",
+          kind: "identity-overlay",
+          anchorId: "player-anchor",
+          interactive: false,
+          priority: 10,
+          combatBehavior: "persist",
+        }),
+        createInterfaceShellSurfaceDefinition({
+          surfaceId: "identity-target-surface",
+          owner: "player-system",
+          kind: "identity-overlay",
+          anchorId: "target-anchor",
+          interactive: true,
+          priority: 8,
+          combatBehavior: "reduce",
+        }),
+      ],
+      identityOverlays: [
+        createIdentityStatusOverlayDefinition({
+          overlayId: "self-state",
+          surfaceId: "identity-self-surface",
+          targetKind: "self",
+          relation: "self",
+          invocation: "self-state",
+          requiresLineOfSight: false,
+          readConfidence: "complete",
+          perceivableFacts: ["display-name", "health-band"],
+          readableFacts: ["display-name", "health-band"],
+          presentation: "full",
+        }),
+        createIdentityStatusOverlayDefinition({
+          overlayId: "target-state",
+          surfaceId: "identity-target-surface",
+          targetKind: "external",
+          targetId: "forest-wolf",
+          relation: "unfriendly",
+          invocation: "identity-sweep",
+          requiresLineOfSight: true,
+          readConfidence: "fuzzy",
+          perceivableFacts: ["relation", "threat-band"],
+          readableFacts: ["relation", "threat-band"],
+          presentation: "condensed",
+        }),
+      ],
+    });
+
+    expect(assessInterfaceShellDefinition(shell).accepted).toBe(true);
+    expect(shell.identityOverlays).toHaveLength(2);
+    expect(shell.reducedCombat.retainedSurfaceKinds).toContain(
+      "identity-overlay"
+    );
   });
 
   it("creates default shells with frozen empty collections and reduced-combat overrides", () => {
