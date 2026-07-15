@@ -34,7 +34,7 @@ describe("@plasius/player-system-interface", () => {
       PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID
     );
     expect(PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID).toBe(
-      "isekai.player-system.interface.enabled"
+      "harmony.player-system.interface.enabled"
     );
   });
 
@@ -90,7 +90,7 @@ describe("@plasius/player-system-interface", () => {
     });
 
     expect(PLAYER_SYSTEM_IDENTITY_FEATURE_FLAG_ID).toBe(
-      "isekai.player-system.identity.enabled"
+      "harmony.player-system.identity.enabled"
     );
     expect(selfState.relation).toBe("self");
     expect(alliedTarget.relation).toBe("allied");
@@ -354,14 +354,14 @@ describe("@plasius/player-system-interface", () => {
 
   it("creates default shells with frozen empty collections and reduced-combat overrides", () => {
     const shell = createInterfaceShellDefinition({
-      featureFlagId: "isekai.player-system.interface.override",
+      featureFlagId: "harmony.player-system.interface.override",
       reducedCombat: {
         retainedSurfaceKinds: [],
         maxInteractiveSurfaces: 0,
       },
     });
 
-    expect(shell.featureFlagId).toBe("isekai.player-system.interface.override");
+    expect(shell.featureFlagId).toBe("harmony.player-system.interface.override");
     expect(shell.focusPane).toBeUndefined();
     expect(shell.surfaces).toEqual([]);
     expect(shell.targetPopups).toEqual([]);
@@ -370,6 +370,26 @@ describe("@plasius/player-system-interface", () => {
     expect(Object.isFrozen(shell.surfaces)).toBe(true);
     expect(Object.isFrozen(shell.targetPopups)).toBe(true);
     expect(Object.isFrozen(shell.reducedCombat.retainedSurfaceKinds)).toBe(true);
+  });
+
+  it("contains no legacy Isekai namespace in exported runtime rollout contracts", () => {
+    const rolloutContracts = [
+      PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID,
+      PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID,
+      PLAYER_SYSTEM_RUNTIME_NFR_FEATURE_FLAG_ID,
+      PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID,
+      PLAYER_SYSTEM_IDENTITY_FEATURE_FLAG_ID,
+      packageDescriptor.featureFlagId,
+      defaultPlayerSystemInterfaceContract.featureFlagId,
+      defaultPlayerSystemInterfacePortabilityContract.featureFlagId,
+    ];
+
+    expect(rolloutContracts.every((value) => value.startsWith("harmony."))).toBe(
+      true
+    );
+    expect(rolloutContracts.some((value) => value.startsWith("isekai."))).toBe(
+      false
+    );
   });
 
   it("assesses coexistence and reduced-combat limits for Party/System shells", () => {

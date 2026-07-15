@@ -26,7 +26,7 @@ Combat-safe visibility is derived from the shell's retained surface kinds and
 each surface's `persist`, `reduce`, or `suspend` behavior. Pane hosts describe
 supported adapters but do not render panes. Alert definitions hold a bounded
 locale-to-copy map and do not call a translation service. The existing
-`isekai.player-system.interface.enabled` feature flag remains the rollout
+`harmony.player-system.interface.enabled` feature flag remains the rollout
 control; no capability is added because this package provides reusable
 contracts rather than entitlement or navigation.
 

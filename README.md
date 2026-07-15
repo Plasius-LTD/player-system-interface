@@ -95,7 +95,7 @@ console.log(
 
 ## Interface NFR Contract
 
-The inherited feature flag for this work is `isekai.player-system.interface.enabled`.
+The inherited feature flag for this work is `harmony.player-system.interface.enabled`.
 
 `defaultPlayerSystemInterfaceContract` and `createPlayerSystemInterfaceContract()` make these host expectations explicit:
 
@@ -107,7 +107,7 @@ The inherited feature flag for this work is `isekai.player-system.interface.enab
 
 ## Interface Portability Contract
 
-The inherited feature flag for this work is `isekai.player-system.interface.enabled`.
+The inherited feature flag for this work is `harmony.player-system.interface.enabled`.
 
 `defaultPlayerSystemInterfacePortabilityContract`,
 `createPlayerSystemInterfacePortabilityContract()`, and
@@ -132,7 +132,7 @@ The inherited feature flag for this work is `isekai.player-system.interface.enab
 
 `createIdentityStatusOverlayDefinition()` represents the Identity System's
 self-state and explicit external target projections. The inherited feature
-flag is `isekai.player-system.identity.enabled`.
+flag is `harmony.player-system.identity.enabled`.
 
 - Self-state overlays use the `self-state` invocation and never require line of
   sight.
@@ -145,6 +145,24 @@ flag is `isekai.player-system.identity.enabled`.
 - Add identity overlays to a shell with an `identity-overlay` surface and use
   `assessIdentityStatusOverlayDefinition()` / `assessInterfaceShellDefinition()`
   before rendering.
+
+## Project Harmony namespace migration
+
+The Project Harmony cutover is a breaking public-contract change. Consumers
+moving to the next major release must replace these rollout values before
+enabling `harmony.namespace-cutover.enabled`:
+
+| Previous key | Harmony key |
+| --- | --- |
+| `isekai.player-system.interface.enabled` | `harmony.player-system.interface.enabled` |
+| `isekai.player-system.identity.enabled` | `harmony.player-system.identity.enabled` |
+| `isekai.player-system.packages.enabled` | `harmony.player-system.packages.enabled` |
+| `isekai.player-system.runtime-nfr.enabled` | `harmony.player-system.runtime-nfr.enabled` |
+| `isekai.player-system.runtime-portability.enabled` | `harmony.player-system.runtime-portability.enabled` |
+
+The package publishes only Harmony values. It provides no aliases, dual-read
+parsing, environment fallback, or runtime translation for the previous product
+namespace. Caller-supplied interface overrides must also use `harmony.*` keys.
 
 ## Shell State, 3D Panes, and Ambient Alerts
 
@@ -168,7 +186,8 @@ map with an explicit live-region mode. Resolve the best available copy with
 - ADRs: [docs/adrs](./docs/adrs)
 - TDRs: [docs/tdrs](./docs/tdrs)
 - Design notes: [docs/design](./docs/design)
-- Parent feature flag: `isekai.player-system.interface.enabled`
+- Parent feature flag: `harmony.player-system.interface.enabled`
 - Capability: not required for package bootstrap; interface adoption remains feature-flag led
-- Rollback: disable `isekai.player-system.interface.enabled` to halt package-family adoption without changing package code
-- Identity rollback: disable `isekai.player-system.identity.enabled` to stop identity projection adoption without changing package code
+- Rollback: disable `harmony.player-system.interface.enabled` to halt package-family adoption without changing package code
+- Identity rollback: disable `harmony.player-system.identity.enabled` to stop identity projection adoption without changing package code
+- Namespace rollback: disable `harmony.namespace-cutover.enabled`, restore the previous coordinated package majors, and complete the approved reverse stored-value migration before re-enabling consumers

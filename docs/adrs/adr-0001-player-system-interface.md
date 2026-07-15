@@ -13,12 +13,12 @@ The Player System needs a reusable interface package for world-space panels, foc
 `@plasius/player-system-interface` will own interface-facing contracts and helpers for Player System overlays while leaving runtime orchestration to `@plasius/player-system`.
 
 The package inherits the Player System package-family parent feature flag
-`isekai.player-system.packages.enabled`. No capability is required at bootstrap
+`harmony.player-system.packages.enabled`. No capability is required at bootstrap
 time because this repository defines reusable interface contracts rather than
 user-facing entitlement or navigation.
 
 The interface boundary also owns the explicit portability contract behind
-`isekai.player-system.runtime-portability.enabled`, including host adapter
+`harmony.player-system.runtime-portability.enabled`, including host adapter
 expectations and bounded multi-pane or multi-overlay composition assumptions.
 
 ## Consequences
@@ -27,6 +27,6 @@ expectations and bounded multi-pane or multi-overlay composition assumptions.
 - Rendering-specific integrations can stay outside gameplay orchestration.
 - Party/System composition work has an explicit interface boundary.
 - Rollback for early adoption remains centralized: disable
-  `isekai.player-system.packages.enabled`.
+  `harmony.player-system.packages.enabled`.
 - Host-specific assumptions are surfaced as testable contract metadata instead
   of remaining implicit in renderer implementations.

@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-07-14
-- Feature flag: `isekai.player-system.identity.enabled`
+- Feature flag: `harmony.player-system.identity.enabled`
 
 ## Context
 
@@ -42,4 +42,4 @@ source of identity truth or implement rendering, perception, or authorization.
 
 The public API gains immutable identity overlay types, factories, and
 assessment functions. Consumers can roll back adoption by disabling
-`isekai.player-system.identity.enabled`; no package code change is required.
+`harmony.player-system.identity.enabled`; no package code change is required.
