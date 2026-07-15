@@ -8,6 +8,20 @@ All notable changes to this project will be documented in this file.
   - (placeholder)
 
 - **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [1.0.0] - 2026-07-15
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
   - **Breaking:** replaced exported Player System interface and identity rollout values, plus active package-family documentation, from `isekai.*` to `harmony.*`. The next release is a major version and intentionally provides no aliases, dual-read parsing, or legacy runtime fallback.
 
 - **Fixed**
@@ -74,3 +88,4 @@ All notable changes to this project will be documented in this file.
 [0.1.4]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v0.1.4
 [0.1.5]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v0.1.5
 [0.1.6]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v0.1.6
+[1.0.0]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v1.0.0
