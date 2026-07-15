@@ -277,7 +277,7 @@ export interface InterfaceContractAssessment {
 export const PLAYER_SYSTEM_INTERFACE_PACKAGE = "@plasius/player-system-interface";
 export const PLAYER_SYSTEM_INTERFACE_ENV_PREFIX = "PLAYER_SYSTEM_INTERFACE";
 export const PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID =
-  "isekai.player-system.interface.enabled";
+  "harmony.player-system.interface.enabled";
 export const PLAYER_SYSTEM_PACKAGES_FEATURE_FLAG_ID =
   PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID;
 export const PLAYER_SYSTEM_RUNTIME_NFR_FEATURE_FLAG_ID =
@@ -285,7 +285,7 @@ export const PLAYER_SYSTEM_RUNTIME_NFR_FEATURE_FLAG_ID =
 export const PLAYER_SYSTEM_RUNTIME_PORTABILITY_FEATURE_FLAG_ID =
   PLAYER_SYSTEM_INTERFACE_FEATURE_FLAG_ID;
 export const PLAYER_SYSTEM_IDENTITY_FEATURE_FLAG_ID =
-  "isekai.player-system.identity.enabled";
+  "harmony.player-system.identity.enabled";
 
 export const packageDescriptor: PackageDescriptor = Object.freeze({
   packageName: PLAYER_SYSTEM_INTERFACE_PACKAGE,

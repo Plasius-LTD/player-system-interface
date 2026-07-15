@@ -4,9 +4,9 @@
 
 Bootstrap the interface package with dual-module outputs, baseline CI, overlay
 contracts, docs, demo, tests, and the inherited feature flag
-`isekai.player-system.packages.enabled`.
+`harmony.player-system.packages.enabled`.
 
-Feature `isekai.player-system.runtime-portability.enabled` extends that scope
+Feature `harmony.player-system.runtime-portability.enabled` extends that scope
 with explicit host-adapter and composition-scale contracts for overlay
 consumers.
 

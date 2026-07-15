@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
   - (placeholder)
 
 - **Changed**
-  - (placeholder)
+  - **Breaking:** replaced exported Player System interface and identity rollout values, plus active package-family documentation, from `isekai.*` to `harmony.*`. The next release is a major version and intentionally provides no aliases, dual-read parsing, or legacy runtime fallback.
 
 - **Fixed**
   - (placeholder)
