@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [1.0.1] - 2026-09-13
+
 ### Changed
 - Refresh compatible npm dependencies from the registry for the weekly dependency maintenance wave.
 
@@ -100,3 +114,4 @@ All notable changes to this project will be documented in this file.
 [0.1.5]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v0.1.5
 [0.1.6]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v0.1.6
 [1.0.0]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v1.0.0
+[1.0.1]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v1.0.1
