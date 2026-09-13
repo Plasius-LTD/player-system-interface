@@ -16,6 +16,20 @@ All notable changes to this project will be documented in this file.
 - **Security**
   - (placeholder)
 
+## [1.0.2] - 2026-09-13
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
 ## [1.0.1] - 2026-09-13
 
 ### Changed
@@ -116,3 +130,4 @@ All notable changes to this project will be documented in this file.
 [0.1.6]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v0.1.6
 [1.0.0]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v1.0.0
 [1.0.1]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v1.0.1
+[1.0.2]: https://github.com/Plasius-LTD/player-system-interface/releases/tag/v1.0.2
