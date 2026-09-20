@@ -1,6 +1,6 @@
 {
   "name": "@plasius/player-system-interface",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "World-space Player System overlays, focus panes, and target-surface contracts for Plasius game experiences",
   "type": "module",
   "sideEffects": false,
