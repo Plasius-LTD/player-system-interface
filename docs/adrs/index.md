@@ -5,4 +5,5 @@
 - [ADR-0003: Identity Projection Contract Boundary](./adr-0003-identity-projection-contract-boundary.md)
 - [ADR-0004: Project Harmony Namespace Cutover](./adr-0004-harmony-namespace-cutover.md)
 - [ADR-0005: Hosted OIDC Package Publication](./adr-0005-hosted-oidc-package-publication.md)
+- [ADR-0006: Trusted Self-Hosted CI](./adr-0006-trusted-self-hosted-ci.md)
 - [ADR Template](./adr-template.md)
